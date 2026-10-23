@@ -1,0 +1,443 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Spider-Man: Rise Again</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700;800&family=Teko:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/src/style.css" />
+</head>
+<body>
+  <div id="app"></div>
+
+  <!-- In-Game HUD Overlay (pointer-events: none) -->
+  <div id="hud">
+    <!-- Top-Left Telemetry Module -->
+    <div class="hudTopLeft">
+      <div class="brandBlock">
+        <div class="brandLogo">SPIDER-MAN</div>
+        <div class="brandSubtitle">RISE AGAIN</div>
+      </div>
+      <div class="telemetryBlock">
+        <div class="speedRow">
+          <span id="speed" class="speedValue">0</span>
+          <span class="speedUnit">KM/H</span>
+        </div>
+        <div class="statusRow">
+          <span class="statusLabel">STATE //</span>
+          <span id="status" class="statusValue">AIR</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Top-Right Session & Status Module -->
+    <div class="hudTopRight">
+      <div id="multiplayerBadge" class="hudBadge solo">
+        <span class="pulseDot"></span>
+        <span id="mpBadgeText">SOLO SESSION</span>
+        <button id="hudCopyLinkBtn" class="hudActionBtn hidden" aria-label="Copy invite link">COPY INVITE</button>
+      </div>
+      <button id="soundToggle" class="hudActionBtn" aria-label="Toggle Sound" aria-pressed="false">SOUND: ON</button>
+      <button id="qualityToggleBtn" class="hudActionBtn" aria-label="Toggle Quality">QUALITY: MED (Q)</button>
+    </div>
+
+    <!-- Center Reticle & Dynamic Speed Vignette -->
+    <div class="reticle" aria-hidden="true">
+      <div class="reticleCross"></div>
+      <div class="reticleDot"></div>
+    </div>
+    <div class="speedFrame" aria-hidden="true"></div>
+
+    <!-- Contextual Wall Crawl Prompt -->
+    <div id="wallPrompt" class="wallPrompt hidden">
+      <kbd>E</kbd> <span>ATTACH TO WALL</span>
+    </div>
+
+    <div id="cityNotice" class="cityNotice hidden"></div>
+
+    <!-- Bottom-Left Web Abilities Cluster -->
+    <div class="hudBottomLeft">
+      <div class="webClusterHeader">TRAVERSAL SYSTEMS</div>
+      <div class="webStatusHUD">
+        <div id="leftHandBadge" class="handBadge ready">
+          <div class="handBadgeInner">
+            <span class="handKey">LMB / Z</span>
+            <span class="handTag">LEFT WEB</span>
+            <span class="handState">READY</span>
+          </div>
+        </div>
+        <div id="rightHandBadge" class="handBadge ready">
+          <div class="handBadgeInner">
+            <span class="handKey">RMB / X</span>
+            <span class="handTag">RIGHT WEB</span>
+            <span class="handState">READY</span>
+          </div>
+        </div>
+        <div class="handBadge crawlBadge">
+          <div class="handBadgeInner">
+            <span class="handKey">E</span>
+            <span class="handTag">WALL CRAWL</span>
+            <span class="handState">READY</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bottom-Right Quick Guide -->
+    <div class="hudBottomRight">
+      <div class="keyGuide">
+        <span><kbd>SPACE</kbd> Jump / Web Leap</span>
+        <span><kbd>SHIFT</kbd> Sprint / Fast Crawl</span>
+        <span><kbd>ESC</kbd> Pause Menu</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Title Screen -->
+  <div id="startScreen" class="titleScreen">
+    <div class="titleBgBackdrop"></div>
+    <div class="titleLeftPanel">
+      <div class="titleBrandStack">
+        <div class="marvelBadge">MARVEL</div>
+        <h1 class="mainTitle">SPIDER-MAN</h1>
+        <div class="subTitle">RISE AGAIN</div>
+      </div>
+
+      <div class="startPrompt">
+        <span class="pulsePrompt">PRESS <kbd>ENTER</kbd> OR CLICK TO START</span>
+      </div>
+
+      <!-- Main Navigation Menu -->
+      <nav class="titleMenu" id="titleMenu">
+        <button id="startBtn" class="menuItem selected" data-action="play">
+          <span class="menuIcon">▶</span>
+          <span class="menuText">PLAY GAME</span>
+          <span class="menuCorner tl"></span>
+          <span class="menuCorner br"></span>
+        </button>
+        <button id="openMpBtn" class="menuItem" data-action="multiplayer">
+          <span class="menuIcon">✦</span>
+          <span class="menuText">ONLINE MULTIPLAYER</span>
+          <span class="menuCorner tl"></span>
+          <span class="menuCorner br"></span>
+        </button>
+        <button id="openSettingsBtn" class="menuItem" data-action="settings">
+          <span class="menuIcon">⚙</span>
+          <span class="menuText">SETTINGS</span>
+          <span class="menuCorner tl"></span>
+          <span class="menuCorner br"></span>
+        </button>
+        <button id="openControlsBtn" class="menuItem" data-action="controls">
+          <span class="menuIcon">⌨</span>
+          <span class="menuText">CONTROLS</span>
+          <span class="menuCorner tl"></span>
+          <span class="menuCorner br"></span>
+        </button>
+      </nav>
+
+      <div class="navHintBar">
+        <span><kbd>W / S / ↑ / ↓</kbd> Navigate</span>
+        <span><kbd>ENTER</kbd> Select</span>
+      </div>
+
+      <div id="startLockNotice" class="lockNotice hidden">
+        <span>Pointer lock was not granted. Click Play to retry mouse lock.</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Pause Screen -->
+  <div id="pauseMenu" class="overlayScreen hidden">
+    <div class="pauseBackdrop"></div>
+    <div class="pauseLeftPanel">
+      <div class="pauseHeader">
+        <div class="pauseTag">GAME STATUS</div>
+        <h2>PAUSED</h2>
+      </div>
+
+      <nav class="pauseMenuNav" id="pauseMenuNav">
+        <button id="resumeBtn" class="menuItem selected" data-action="resume">
+          <span class="menuIcon">▶</span>
+          <span class="menuText">RESUME</span>
+          <span class="menuCorner tl"></span>
+          <span class="menuCorner br"></span>
+        </button>
+        <button id="resetBtn" class="menuItem" data-action="respawn">
+          <span class="menuIcon">↺</span>
+          <span class="menuText">RESPAWN (RESET POSITION)</span>
+          <span class="menuCorner tl"></span>
+          <span class="menuCorner br"></span>
+        </button>
+        <button id="pauseSettingsBtn" class="menuItem" data-action="settings">
+          <span class="menuIcon">⚙</span>
+          <span class="menuText">SETTINGS</span>
+          <span class="menuCorner tl"></span>
+          <span class="menuCorner br"></span>
+        </button>
+        <button id="pauseControlsBtn" class="menuItem" data-action="controls">
+          <span class="menuIcon">⌨</span>
+          <span class="menuText">CONTROLS</span>
+          <span class="menuCorner tl"></span>
+          <span class="menuCorner br"></span>
+        </button>
+        <button id="mainMenuBtn" class="menuItem" data-action="mainmenu">
+          <span class="menuIcon">✖</span>
+          <span class="menuText">MAIN MENU</span>
+          <span class="menuCorner tl"></span>
+          <span class="menuCorner br"></span>
+        </button>
+      </nav>
+
+      <div id="pauseMpInfo" class="pauseMpInfo">
+        <span id="pauseMpRoomText">SESSION: SINGLE PLAYER</span>
+        <button id="pauseCopyInviteBtn" class="hudActionBtn hidden">COPY INVITE LINK</button>
+      </div>
+
+      <div class="navHintBar">
+        <span><kbd>W / S / ↑ / ↓</kbd> Navigate</span>
+        <span><kbd>ENTER</kbd> Select</span>
+        <span><kbd>ESC</kbd> Resume</span>
+      </div>
+
+      <div id="pauseLockNotice" class="lockNotice hidden">
+        <span>Mouse lock was released. Click Resume to regain camera control.</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Settings Modal (Reference Images 4 & 5) -->
+  <div id="settingsModal" class="overlayScreen hidden">
+    <div class="modalBackdrop"></div>
+    <div class="settingsPanel">
+      <div class="settingsHeader">
+        <div class="settingsTitle">SETTINGS</div>
+        <div class="settingsCategoryTabs">
+          <button class="catTab active" data-category="graphics">DISPLAY & GRAPHICS</button>
+          <button class="catTab" data-category="controls">GAMEPLAY & CONTROLS</button>
+          <button class="catTab" data-category="audio">AUDIO & ENVIRONMENT</button>
+        </div>
+      </div>
+
+      <div class="settingsBody">
+        <!-- Left Column: Setting Rows -->
+        <div class="settingsLeftCol" id="settingsRowsContainer">
+          <!-- Dynamically populated or rendered -->
+          <div class="settingRow selected" data-setting="quality">
+            <span class="settingName">GRAPHICS QUALITY</span>
+            <div class="settingControl">
+              <span class="arrow leftArrow">‹</span>
+              <span class="settingValue" id="valQuality">MEDIUM</span>
+              <span class="arrow rightArrow">›</span>
+            </div>
+            <span class="menuCorner tl"></span>
+            <span class="menuCorner br"></span>
+          </div>
+
+          <div class="settingRow" data-setting="perfMode">
+            <span class="settingName">PERFORMANCE PRESET (300 FPS)</span>
+            <div class="settingControl">
+              <span class="arrow leftArrow">‹</span>
+              <span class="settingValue" id="valPerfMode">OFF</span>
+              <span class="arrow rightArrow">›</span>
+            </div>
+            <span class="menuCorner tl"></span>
+            <span class="menuCorner br"></span>
+          </div>
+
+          <div class="settingRow" data-setting="mouseSens">
+            <span class="settingName">CAMERA SENSITIVITY</span>
+            <div class="settingControl">
+              <span class="arrow leftArrow">‹</span>
+              <span class="settingValue" id="valMouseSens">100%</span>
+              <span class="arrow rightArrow">›</span>
+            </div>
+            <span class="menuCorner tl"></span>
+            <span class="menuCorner br"></span>
+          </div>
+
+          <div class="settingRow" data-setting="fov">
+            <span class="settingName">FIELD OF VIEW</span>
+            <div class="settingControl">
+              <span class="arrow leftArrow">‹</span>
+              <span class="settingValue" id="valFov">82°</span>
+              <span class="arrow rightArrow">›</span>
+            </div>
+            <span class="menuCorner tl"></span>
+            <span class="menuCorner br"></span>
+          </div>
+
+          <div class="settingRow" data-setting="timeOfDay">
+            <span class="settingName">TIME OF DAY</span>
+            <div class="settingControl">
+              <span class="arrow leftArrow">‹</span>
+              <span class="settingValue" id="valTimeOfDay">DAY</span>
+              <span class="arrow rightArrow">›</span>
+            </div>
+            <span class="menuCorner tl"></span>
+            <span class="menuCorner br"></span>
+          </div>
+
+          <div class="settingRow" data-setting="soundFx">
+            <span class="settingName">SOUND & WIND AUDIO</span>
+            <div class="settingControl">
+              <span class="arrow leftArrow">‹</span>
+              <span class="settingValue" id="valSoundFx">ON</span>
+              <span class="arrow rightArrow">›</span>
+            </div>
+            <span class="menuCorner tl"></span>
+            <span class="menuCorner br"></span>
+          </div>
+        </div>
+
+        <!-- Glowing Vertical Divider -->
+        <div class="settingsDivider"></div>
+
+        <!-- Right Column: Detailed Description Panel -->
+        <div class="settingsRightCol">
+          <div class="descriptionCard">
+            <div class="descHeader" id="settingDescTitle">GRAPHICS QUALITY</div>
+            <div class="descText" id="settingDescBody">
+              Adjusts visual fidelity and rendering load across geometry, shadows, lighting, and ambient occlusion.
+              <ul class="descBullets" id="settingDescBullets">
+                <li><b>HIGH:</b> Full resolution shadow mapping, atmospheric fog, and crisp texture filtering.</li>
+                <li><b>MEDIUM:</b> Balanced visual fidelity optimized for stable 60+ FPS gameplay.</li>
+                <li><b>LOW:</b> Reduced shadow cascades and simplified materials for higher frame rates.</li>
+              </ul>
+            </div>
+            <div class="descFooter" id="settingDescFooter">
+              Active Value: <b id="settingDescActiveVal">MEDIUM</b>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Settings Bottom Bar -->
+      <div class="settingsBottomBar">
+        <div class="navHintBar">
+          <span><kbd>W / S / ↑ / ↓</kbd> Navigate</span>
+          <span><kbd>A / D / ← / →</kbd> Adjust Value</span>
+          <span><kbd>ESC</kbd> Back</span>
+        </div>
+        <button id="closeSettingsBtn" class="hudActionBtn">BACK (ESC)</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Controls Modal -->
+  <div id="controlsModal" class="overlayScreen hidden">
+    <div class="modalBackdrop"></div>
+    <div class="controlsPanel">
+      <div class="controlsHeader">
+        <div class="controlsTitle">CONTROLS & SHORTCUTS</div>
+        <button id="closeControlsBtn" class="hudActionBtn">BACK (ESC)</button>
+      </div>
+
+      <div class="controlsCardsGrid">
+        <div class="controlCard">
+          <div class="cardTitle">WEB-SLINGING</div>
+          <div class="controlRow"><kbd>LMB</kbd><span>Hold Left Web Anchor</span></div>
+          <div class="controlRow"><kbd>RMB</kbd><span>Hold Right Web Anchor</span></div>
+          <div class="controlRow"><kbd>Z / X</kbd><span>Alternate Left / Right Web keys</span></div>
+          <div class="controlRow"><kbd>RELEASE</kbd><span>Release web line to slingshot</span></div>
+        </div>
+
+        <div class="controlCard">
+          <div class="cardTitle">LOCOMOTION & WALL CRAWL</div>
+          <div class="controlRow"><kbd>W / A / S / D</kbd><span>Ground Move / Wall Crawl</span></div>
+          <div class="controlRow"><kbd>SPACE</kbd><span>Jump / Wall Launch / Web Boost</span></div>
+          <div class="controlRow"><kbd>SHIFT</kbd><span>Sprint / Fast Crawl / Dive</span></div>
+          <div class="controlRow"><kbd>E</kbd><span>Attach / Detach Wall Crawl</span></div>
+        </div>
+
+        <div class="controlCard">
+          <div class="cardTitle">CAMERA & SYSTEMS</div>
+          <div class="controlRow"><kbd>MOUSE</kbd><span>Free 360° Camera Look & Web Aim</span></div>
+          <div class="controlRow"><kbd>ESC</kbd><span>Pause Game & Cursor Unlock</span></div>
+          <div class="controlRow"><kbd>Q</kbd><span>Quick Toggle Graphics Quality</span></div>
+          <div class="controlRow"><kbd>N</kbd><span>Toggle Day / Night Lighting</span></div>
+          <div class="controlRow"><kbd>M</kbd><span>Toggle Audio Mute</span></div>
+          <div class="controlRow"><kbd>R</kbd><span>Reset / Respawn Position</span></div>
+        </div>
+      </div>
+
+      <div class="settingsBottomBar">
+        <div class="navHintBar">
+          <span><kbd>ESC</kbd> Close Controls</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Multiplayer Lobby Modal -->
+  <div id="multiplayerModal" class="overlayScreen hidden">
+    <div class="modalBackdrop"></div>
+    <div class="mpPanel">
+      <div class="mpHeaderBar">
+        <div class="mpHeaderTitle">ONLINE TWO-PLAYER MULTIPLAYER</div>
+        <button id="closeMpModalBtn" class="hudActionBtn">BACK (ESC)</button>
+      </div>
+      <p class="mpSubtext">Invite a friend on any internet connection. They simply open your shareable link in any modern browser — no install or download required.</p>
+
+      <div class="mpActionGrid">
+        <div class="mpActionCard">
+          <div class="cardTitle">HOST A ROOM</div>
+          <p>Create a dedicated synchronized room code and generate a shareable URL.</p>
+          <button id="createRoomBtn" class="menuItem selected">
+            <span class="menuIcon">✦</span>
+            <span class="menuText">CREATE ROOM</span>
+            <span class="menuCorner tl"></span>
+            <span class="menuCorner br"></span>
+          </button>
+        </div>
+
+        <div class="mpActionCard">
+          <div class="cardTitle">JOIN EXISTING ROOM</div>
+          <p>Enter the 6-character room code shared by your friend.</p>
+          <div class="mpInputRow">
+            <input id="roomCodeInput" type="text" placeholder="ROOM CODE" maxlength="6" autocomplete="off" spellcheck="false" />
+            <button id="joinRoomBtn" class="menuItem">
+              <span class="menuText">JOIN</span>
+              <span class="menuCorner tl"></span>
+              <span class="menuCorner br"></span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div id="mpRoomDisplay" class="mpRoomDisplay hidden">
+        <div class="roomCodeBadge">
+          <span>ROOM CODE:</span> <b id="displayRoomCode">------</b>
+        </div>
+        <button id="copyInviteBtn" class="hudActionBtn copyBtn">COPY INVITE LINK</button>
+        <div id="mpWaitingText" class="mpWaitingText">Waiting for your friend to open the link...</div>
+      </div>
+      <button id="mpEnterGameBtn" class="menuItem enterGameBtn hidden">
+        <span class="menuIcon">▶</span>
+        <span class="menuText">ENTER CITY TOGETHER</span>
+        <span class="menuCorner tl"></span>
+        <span class="menuCorner br"></span>
+      </button>
+      <div id="mpStatusMessage" class="mpStatusMessage"></div>
+
+      <div class="mpPublicUrlRow" id="mpPublicUrlRow">
+        <span class="mpUrlLabel">PUBLIC INVITE DOMAIN / TUNNEL (FOR REMOTE FRIENDS):</span>
+        <div class="mpInputRow">
+          <input id="mpPublicUrlInput" type="text" placeholder="Auto-detecting public URL or enter https://your-domain..." />
+          <button id="savePublicUrlBtn" class="hudActionBtn">SAVE</button>
+        </div>
+        <span class="mpUrlNote">When hosting locally, set your public tunnel URL so friends on different internet connections join directly without ERR_CONNECTION_REFUSED.</span>
+      </div>
+
+      <div class="settingsBottomBar">
+        <div class="navHintBar">
+          <span><kbd>ESC</kbd> Close Modal</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>
